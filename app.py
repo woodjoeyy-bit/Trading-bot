@@ -4,25 +4,27 @@ import os
 
 app = Flask(__name__)
 
-BOT_TOKEN = "8729249832:AAESzqC79mtTkl5BZyBhzKTStow2a9RLubM"
-CHAT_ID = "7963887087"
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+CHAT_ID = os.environ.get("CHAT_ID")
 
-@app.route('/webhook', methods=['POST'])
+@app.route("/")
+def home():
+    return "Webhook is live!"
+
+@app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.json
+    data = request.get_json(silent=True) or {}
 
     symbol = data.get("symbol", "Unknown")
     side = data.get("side", "Unknown")
-    timeframe = data.get("timeframe", "")
-    price = data.get("price", "")
+    timeframe = data.get("timeframe", "Unknown")
+    price = data.get("price", "Unknown")
 
-    message = f"""
-🚨 TRADE ALERT 🚨
+    message = f"""🚨 TRADE ALERT 🚨
 Symbol: {symbol}
 Side: {side}
 Timeframe: {timeframe}
-Price: {price}
-"""
+Price: {price}"""
 
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
@@ -30,9 +32,6 @@ Price: {price}
         "text": message
     }
 
-    requests.post(url, json=payload)
+    requests.post(url, json=payload, timeout=10)
 
-    return {"status": "ok"}
-
-if __name__ == '__main__':
-    app.run()
+    return {"status": "ok"}, 200
